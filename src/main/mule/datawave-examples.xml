@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ee759ef2-3291-4850-baf7-3d8d617588b7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="datawave-examplesFlow" doc:id="88708147-0205-4f13-97cb-70fb69cbbbbd" >
+		<http:listener doc:name="GET /dw" doc:id="673b7cdd-0085-4571-82a5-cdc1be9709a1" config-ref="HTTP_Listener_config" path="/dw"/>
+		<ee:transform doc:name="Arrays &amp; Objects" doc:id="3a12bed7-a32d-449c-b0ab-f8401f868ef3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+var a1= [1,"a",true]
+var o1= {one:1, two:2}
+---
+{
+	addArrays: a1 + a1 + a1,
+	concatArrays: a1 ++ a1,
+	//object: o1 + o1 error, cannot 
+	arrayWithObject: a1 + o1,
+	concatObjects:  o1 ++ o1,
+	minusObject: o1 ++ (o1 - "one"),
+	minusObjectBoth: (o1 ++ o1) - "one",
+	objectWithoutElement: o1 ++ o1 -- (one:1)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Contains" doc:id="827cf743-c298-4ac5-a06c-2bf557330371" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var a1=[1,21,13,47,45,61]
+---
+{
+	array: a1,
+	ascendingArray: a1 orderBy $,
+	descendingOrder: a1 orderBy -$,
+	//descendingOrderMethod: orderBy(a1, $)
+	contains: a1 orderBy -$ contains 1,
+	
+	example: contains("the order", "the")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="map Iterate" doc:id="0644f911-ed22-43ba-abac-87d3fb9cecab" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var bookVar = readUrl("classpath://examples/books.json", "application/json")
+---
+bookVar.books map(data, key)->{
+	isbn: data.isbn as Number,
+	pages: data.pages as String,
+	title: data.title,
+	
+	moreInfo:{
+		desc: data.description,
+		authorName: data.author
+},
+	website: data.website
+
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="RangeOF, typeOf, format" doc:id="0fd8f150-ec8c-4e70-8712-a55f9cf70008" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var firstName = "Javier"
+var lastName = "Garcia"
+var a1 = [1,56,5,2,89]
+var r1 = 2 to 7
+var o1={ one:11, two:22}
+type Currency= String {format: "#,###.00"}
+fun phoneFormat(number:String) = "(" ++ number[0 to 2] ++ ")" ++ "-" ++ number[3 to 5]++ "-"++ number[6 to 9]
+---
+{
+	hello: "Hi " ++ firstName ++" " ++ lastName,
+	hello1: "Hi $(firstName) $(lastName) ",
+	count: sizeOf(lastName),
+	countOfArray: sizeOf(a1),
+	numbersInRange: r1,
+	t: typeOf(a1),
+	sliceRange: r1[0],
+	sliceRange2: r1[5],
+	objectValue: o1,
+	partObjectValue: o1.one,
+	sumObj: o1.one + o1.two,
+	multiplyObject: (o1.one * o1.two + 1500) as String {format: "#,###.00"},
+	formatAsType: (o1.one * o1.two) as Currency,
+	phoneNumber: phoneFormat("7223504047")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="datawave-examplesFlow1" doc:id="c39d5e2c-d793-4a8e-8656-5111353c1d66" >
+		<http:listener doc:name="GET /set" doc:id="f482cfcf-c6f4-4a5f-80a6-cee681d8ba62" config-ref="HTTP_Listener_config" path="/set"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="256d2fbc-c28b-491a-803b-f6a30e4c12e4" >
+			<route >
+				<set-payload value="#[100]" doc:name="Set Payload" doc:id="ab8a380a-d759-4552-a745-45ba97bdca77" />
+			</route>
+			<route >
+				<set-payload value="#[200]" doc:name="Set Payload" doc:id="498f8663-624a-4f6e-bc13-1f7e73aef04e" />
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="abf73fad-6214-4692-b2e4-84cee0ede227">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+	</flow>
+	<flow name="datawave-examplesFlow2" doc:id="b7a08458-1ff5-4662-af96-6248c72fb429" >
+		<http:listener doc:name="GET /for" doc:id="ee42c385-7f06-423d-b246-31c849a60915" config-ref="HTTP_Listener_config" path="/for"/>
+		<set-payload value="#[[1,2,3,4]]" doc:name="Set Payload" doc:id="af7c124e-0994-48e0-8e16-1f30c2f355d8" />
+		<set-variable value="10" doc:name="Set Variable" doc:id="730013db-c31e-486d-8bd6-88608962eb99" variableName="quantity"/>
+		<foreach doc:name="For Each" doc:id="8c2e07ca-1488-4c0a-8e6c-0a987e07e267" >
+			<set-payload value='#["order" ++ payload]' doc:name="Set Payload" doc:id="be4221d7-c74c-47ff-8174-1aa7ce0e9fb1" />
+			<set-variable value="#[vars.quantity + 1]" doc:name="Set Variable" doc:id="562838da-966a-431e-bd7c-df3811948647" variableName="quantity"/>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="41751ee4-217a-480c-a56d-4e336de16508" message="#[[payload, vars.quantity]]"/>
+	</flow>
+	<flow name="datawave-examplesFlow3" doc:id="a0a96887-116a-48b6-a478-bf05c83daae6" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="730d8b1d-e439-44fd-8866-d5156890524e" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10000"/>
+			</scheduling-strategy>
+		</scheduler>
+		<set-payload value='#[["a","b","c"]]' doc:name="Set Payload" doc:id="c7bb4f41-3d3f-4dd9-ac93-be816367810b" />
+		<batch:job jobName="datawave-examplesBatch_Job" doc:id="ae286476-1c3b-4cbf-a960-eb4a4a276ed4" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="02b96190-37f6-47c4-8a0a-ed5db5eeaeca" >
+					<set-payload value="#[upper(payload)]" doc:name="Set Payload" doc:id="4ce89281-7231-44be-b166-225542bb3708" />
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="959a3f27-0645-4ccb-a3b2-857d051e22f2" message="#[payload]"/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="datawave-examplesFlow4" doc:id="774f8c1c-4295-4660-ac00-68e6e9bd6c33" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="d288c977-1041-436d-8337-e559d11d67b8" >
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</scheduler>
+		<set-payload value="#[['a', 'b,', 'c', 'd', 'e']]" doc:name="Set Payload" doc:id="4070e8f2-1d81-4997-8d5d-be6af66f6ab4" />
+		<batch:job jobName="datawave-examplesBatch_Job1" doc:id="c7e9d374-f2a4-40ca-b4af-aa935f177af9" >
+			<batch:process-records >
+				<batch:step name="Batch_Step1" doc:id="002b76b9-8d27-421e-9fec-1cac0758fe37" acceptExpression='#[not (payload contains "b")]'>
+					<ee:transform doc:name="Transform Message" doc:id="8783960d-3998-47fa-9e5f-2fac84655ced">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+upper(payload)]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="bd383fde-7130-4429-8568-1eaeb21b5627" size="3">
+						<logger level="INFO" doc:name="Logger" doc:id="2ea67463-1188-4a0f-9cde-3c107e0e7748" message="#[output application/json --- payload]"/>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+		</batch:job>
+	</flow>
+</mule>
