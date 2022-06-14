@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="arraysFlow" doc:id="d55e3bc7-e2ec-4e3a-a29f-9b5cf57bb0b2" >
+		<ee:transform doc:name="Transform Message" doc:id="97c7a8b8-2585-4c74-953d-0dc8aa5c877b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+import dw::core::Arrays
+var a1 = [1,2,3,6,4,2,32,112,564,121,124,54]
+---
+{
+	divideBy: a1 Arrays::divideBy 3,
+	everyRes: a1 Arrays::every(if ($ > 50) true else false),
+	someResult: a1 Arrays::some(if($ > 50) true else false),
+	indexOfVal: a1 Arrays::indexOf(54),
+	sumBy: a1 Arrays::sumBy($),
+	splitByVal: a1 Arrays::splitAt(7)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="objectsFunctions" doc:id="74a8b61b-70d6-4bfb-8094-0c330454c460" >
+		<ee:transform doc:name="Transform Message" doc:id="74ab95fa-6dfb-43d1-b804-af989e0735c1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+var city = {name: "Bangalore", airport: "BIAL", temp: 22, state:"KN", country: "India"}
+var player = {name: "Javier", street: "Solidaridad"}
+---
+{
+	mergeValue1: dw::core::Objects::mergeWith(city, player),
+	mergeValue2: dw::core::Objects::mergeWith(player, city),
+	dividedByVal: city dw::core::Objects::divideBy(2)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
