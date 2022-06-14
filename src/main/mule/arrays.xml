@@ -39,4 +39,22 @@ var player = {name: "Javier", street: "Solidaridad"}
 			</ee:message>
 		</ee:transform>
 	</flow>
+	<flow name="functions" doc:id="bb93d3d1-6973-4e54-9f47-b718f1887385" >
+		<ee:transform doc:name="Transform Message" doc:id="16264f26-3d7a-4c5b-bc8c-b3591f9b6a99" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+fun myFunctionA(input1, myStringOperation) = 
+	myStringOperation(input1)
+	
+fun addNumber(Number1, Number2) =
+	Number1 + Number2
+---
+{
+	A: myFunctionA("jAvier", upper ),
+	B: addNumber(10,30) as String
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
 </mule>
